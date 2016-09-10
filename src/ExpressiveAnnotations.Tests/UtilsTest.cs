@@ -12,77 +12,13 @@ using Xunit;
 
 namespace ExpressiveAnnotations.Tests
 {
+    using ExpressiveAnnotations.Infrastructure;
+
     public class UtilsTest
     {
-        [Fact]
-        public void verify_serialization_of_basic_parse_exception() // exception is expected to travel through various app domains
-        {
-            var e = new ParseErrorException(@"Operator '!' cannot be applied to operand of type 'System.String'.", new ParseErrorException());
+       
 
-            // save the full ToString() value, including the exception message and stack trace
-            var exceptionToString = e.ToString();
-
-            // round-trip the exception: serialize and de-serialize with a BinaryFormatter
-            using (var ms = new MemoryStream())
-            {
-                var bf = new BinaryFormatter();
-                // "save" object state
-                bf.Serialize(ms, e);
-                // re-use the same stream for de-serialization
-                ms.Seek(0, 0);
-                // replace the original exception with de-serialized one
-                e = (ParseErrorException) bf.Deserialize(ms);
-            }
-
-            // double-check that the exception message and stack trace (owned by the base Exception) are preserved
-            Assert.Equal(exceptionToString, e.ToString());
-        }
-
-        [Fact]
-        public void verify_serialization_of_complete_parse_exception()
-        {
-            var e = new ParseErrorException("Operator '!' cannot be applied to operand of type 'System.String'.", "true && !'false'", new Location(1, 9), new ParseErrorException("other"));
-
-            // sanity check: make sure custom properties are set before serialization
-            Assert.Equal(
-                @"Parse error on line 1, column 9:
-... !'false' ...
-    ^--- Operator '!' cannot be applied to operand of type 'System.String'.",
-                e.Message);
-            Assert.Equal("Operator '!' cannot be applied to operand of type 'System.String'.", e.Error);
-            Assert.Equal("true && !'false'", e.Expression);
-            Assert.NotNull(e.Location);
-            Assert.Equal(1, e.Location.Line);
-            Assert.Equal(9, e.Location.Column);
-            Assert.NotNull(e.InnerException);
-            Assert.Equal("other", e.InnerException.Message);
-
-            var exceptionToString = e.ToString();
-
-            using (var ms = new MemoryStream())
-            {
-                var bf = new BinaryFormatter();
-                bf.Serialize(ms, e);
-                ms.Seek(0, 0);
-                e = (ParseErrorException) bf.Deserialize(ms);
-            }
-
-            // make sure custom properties are preserved after serialization
-            Assert.Equal(
-                @"Parse error on line 1, column 9:
-... !'false' ...
-    ^--- Operator '!' cannot be applied to operand of type 'System.String'.",
-                e.Message);
-            Assert.Equal("Operator '!' cannot be applied to operand of type 'System.String'.", e.Error);
-            Assert.Equal("true && !'false'", e.Expression);
-            Assert.NotNull(e.Location);
-            Assert.Equal(1, e.Location.Line);
-            Assert.Equal(9, e.Location.Column);
-            Assert.NotNull(e.InnerException);
-            Assert.Equal("other", e.InnerException.Message);
-
-            Assert.Equal(exceptionToString, e.ToString());
-        }
+      
 
         [Fact]
         public void verify_fields_values_extraction_from_given_instance()
@@ -98,49 +34,22 @@ namespace ExpressiveAnnotations.Tests
                 }
             };
 
-            Assert.Equal(1, ExpressiveAnnotations.Helper.ExtractValue(model, "Value1"));
-            Assert.Equal(11, ExpressiveAnnotations.Helper.ExtractValue(model, "Internal.Value1"));
-            Assert.Equal(null, ExpressiveAnnotations.Helper.ExtractValue(model, "Internal.Value2"));
+            Assert.Equal(1, ExpressiveAnnotations.Infrastructure.Helper.ExtractValue(model, "Value1"));
+            Assert.Equal(11, ExpressiveAnnotations.Infrastructure.Helper.ExtractValue(model, "Internal.Value1"));
+            Assert.Equal(null, ExpressiveAnnotations.Infrastructure.Helper.ExtractValue(model, "Internal.Value2"));
 
-            var e = Assert.Throws<ArgumentException>(() => ExpressiveAnnotations.Helper.ExtractValue(model, "internal"));
+            var e = Assert.Throws<ArgumentException>(() => ExpressiveAnnotations.Infrastructure.Helper.ExtractValue(model, "internal"));
             Assert.Equal("Value extraction interrupted. Field internal not found.\r\nParameter name: internal", e.Message);
 
-            e = Assert.Throws<ArgumentException>(() => ExpressiveAnnotations.Helper.ExtractValue(model, "Internal.Value123"));
+            e = Assert.Throws<ArgumentException>(() => ExpressiveAnnotations.Infrastructure.Helper.ExtractValue(model, "Internal.Value123"));
             Assert.Equal("Value extraction interrupted. Field Value123 not found.\r\nParameter name: Internal.Value123", e.Message);
 
             model.Internal = null;
-            e = Assert.Throws<ArgumentException>(() => ExpressiveAnnotations.Helper.ExtractValue(model, "Internal.Value1"));
+            e = Assert.Throws<ArgumentException>(() => ExpressiveAnnotations.Infrastructure.Helper.ExtractValue(model, "Internal.Value1"));
             Assert.Equal("Value extraction interrupted. Field Internal is null.\r\nParameter name: Internal.Value1", e.Message);
         }
-
-        [Fact]
-        public void verify_display_names_extraction_from_given_type()
-        {
-            // name provided explicitly
-            Assert.Equal("Value_1", ExpressiveAnnotations.Helper.ExtractDisplayName(typeof (Model), "Value1"));
-            Assert.Equal("Value_1", ExpressiveAnnotations.Helper.ExtractDisplayName(typeof (Model), "Internal.Value1"));
-            
-            // name provided in resources
-            Assert.Equal("_{Value2}_", ExpressiveAnnotations.Helper.ExtractDisplayName(typeof (Model), "Value2"));
-            Assert.Equal("_{Value2}_", ExpressiveAnnotations.Helper.ExtractDisplayName(typeof (Model), "Internal.Value2"));
-
-            var e = Assert.Throws<ArgumentException>(() => ExpressiveAnnotations.Helper.ExtractDisplayName(typeof (Model), "internal"));
-            Assert.Equal("Display name extraction interrupted. Field internal not found.\r\nParameter name: internal", e.Message);
-
-            e = Assert.Throws<ArgumentException>(() => ExpressiveAnnotations.Helper.ExtractDisplayName(typeof (Model), "Internal.Value123"));
-            Assert.Equal("Display name extraction interrupted. Field Value123 not found.\r\nParameter name: Internal.Value123", e.Message);
-
-            e = Assert.Throws<ArgumentException>(() => ExpressiveAnnotations.Helper.ExtractDisplayName(typeof (Model), "NoName"));
-            Assert.Equal("No display name provided for NoName field. Use either Display attribute or DisplayName attribute.\r\nParameter name: NoName", e.Message);
-        }
-
-        [Fact]
-        public void verify_fields_names_extraction_based_on_their_display_names() // Display attribute or DisplayName attribute used as a workaround for field name extraction in older versions of MVC where MemberName was not provided in ValidationContext
-        {
-            Assert.Equal("Value1", typeof (Model).GetPropertyByDisplayName("Value_1").Name);
-            Assert.Equal("Value2", typeof (Model).GetPropertyByDisplayName("_{Value2}_").Name);
-            Assert.Equal("Internal", typeof (Model).GetPropertyByDisplayName("internal").Name);
-        }
+        
+       
 
         [Fact]
         public void type_load_exceptions_are_handled_and_null_type_instances_are_filtered_out()

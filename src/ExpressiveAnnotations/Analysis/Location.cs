@@ -6,13 +6,15 @@ using System;
 
 namespace ExpressiveAnnotations.Analysis
 {
+    using System.Runtime.Serialization;
+
     /// <summary>
     ///     Contains the location information related to some arbitrary data within associated text block.
     ///     <para>
     ///         Used for pointing exact parsing error location in specified expression.
     ///     </para>
     /// </summary>
-    [Serializable]
+    [DataContract]
     public class Location
     {
         /// <summary>
@@ -39,11 +41,13 @@ namespace ExpressiveAnnotations.Analysis
         /// <summary>
         ///     Gets or sets the line number.
         /// </summary>
+        [DataMember]
         public int Line { get; set; }
 
         /// <summary>
         ///     Gets or sets the column number.
         /// </summary>
+        [DataMember]
         public int Column { get; set; }
     }
 }

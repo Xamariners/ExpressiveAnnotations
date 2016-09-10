@@ -7,6 +7,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ExpressiveAnnotations.Attributes
 {
+    using ExpressiveAnnotations.Infrastructure;
+
     /// <summary>
     ///     Validation attribute, executed for null-only annotated field, which indicates that such a field
     ///     is required to be non-null, when computed result of given logical expression is true.

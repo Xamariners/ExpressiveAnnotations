@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 
 namespace ExpressiveAnnotations.Analysis
 {
+    using ExpressiveAnnotations.Infrastructure;
+
     /// <summary>
     ///     Demands types compatibility for operations.
     /// </summary>

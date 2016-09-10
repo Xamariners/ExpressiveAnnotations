@@ -9,9 +9,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using ExpressiveAnnotations.Functions;
+using ExpressiveAnnotations.Infrastructure;
 
 namespace ExpressiveAnnotations.Analysis
 {
+    using ExpressiveAnnotations.Infrastructure;
+
     /* EBNF grammar:
      * 
      * exp         => cond-exp
@@ -161,7 +164,7 @@ namespace ExpressiveAnnotations.Analysis
                 }
                 catch (Exception e)
                 {
-                    throw new ParseErrorException("Parse fatal error.", e);
+                   throw new ParseErrorException("Parse fatal error.", e);
                 }
             }
         }
@@ -441,7 +444,7 @@ namespace ExpressiveAnnotations.Analysis
                             ? Expression.Add(
                                 Expression.Convert(arg1, typeof (object)),
                                 Expression.Convert(arg2, typeof (object)),
-                                typeof (string).GetMethod("Concat", new[] {typeof (object), typeof (object)})) // convert string + string into a call to string.Concat
+                                typeof (string).GetRuntimeMethod("Concat", new[] {typeof (object), typeof (object)})) // convert string + string into a call to string.Concat
                             : Expr.Add(arg1, arg2, oper);
                         break;
                     default:
@@ -765,7 +768,7 @@ namespace ExpressiveAnnotations.Analysis
 
         private Expression FetchPropertyValue(string name, Expression context)
         {
-            var pi = context.Type.GetProperty(name);
+            var pi = context.Type.GetRuntimeProperty(name);
             return pi != null ? Expression.Property(context, pi) : null;
         }
 
@@ -775,7 +778,7 @@ namespace ExpressiveAnnotations.Analysis
                 return Expression.ArrayIndex(context, index);
 
             // not an array - check if the type declares indexer otherwise
-            var pi = context.Type.GetProperties().FirstOrDefault(p => p.GetIndexParameters().Any()); // look for indexer property (usually called Item...)
+            var pi = context.Type.GetRuntimeProperties().FirstOrDefault(p => p.GetIndexParameters().Any()); // look for indexer property (usually called Item...)
             return pi != null ? Expression.Property(context, pi.Name, index) : null;
         }
 
@@ -785,9 +788,10 @@ namespace ExpressiveAnnotations.Analysis
             if (parts.Length > 1)
             {
                 var enumTypeName = string.Join(".", parts.Take(parts.Length - 1).ToList());
-                var enumTypes = AppDomain.CurrentDomain.GetAssemblies()
+               
+                var enumTypes = PCLExt.AppDomain.AppDomain.GetAssemblies().Where(x => !x.IsDynamic)
                     .SelectMany(a => new AssemblyTypeProvider(a).GetLoadableTypes())
-                    .Where(t => t.IsEnum && string.Concat(".", t.FullName.Replace("+", ".")).EndsWith(string.Concat(".", enumTypeName)))
+                    .Where(t => t.GetTypeInfo().IsEnum && string.Concat(".", t.FullName.Replace("+", ".")).EndsWith(string.Concat(".", enumTypeName)))
                     .ToList();
 
                 if (enumTypes.Count > 1)
@@ -816,10 +820,10 @@ namespace ExpressiveAnnotations.Analysis
             if (parts.Length > 1)
             {
                 var constTypeName = string.Join(".", parts.Take(parts.Length - 1).ToList());
-                var constants = AppDomain.CurrentDomain.GetAssemblies()
+                var constants = PCLExt.AppDomain.AppDomain.GetAssemblies()
                     .SelectMany(a => new AssemblyTypeProvider(a).GetLoadableTypes())
                     .Where(t => string.Concat(".", t.FullName.Replace("+", ".")).EndsWith(string.Concat(".", constTypeName)))
-                    .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                    .SelectMany(t => t.GetFields(ReflectionExtensions.BindingFlags.Public | ReflectionExtensions.BindingFlags.Static | ReflectionExtensions.BindingFlags.FlattenHierarchy)
                         .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.Name.Equals(parts.Last())))
                     .ToList();
 
@@ -827,8 +831,8 @@ namespace ExpressiveAnnotations.Analysis
                 {
                     var constsList = string.Join(
                         $",{Environment.NewLine}",
-                        constants.Select(x => x.ReflectedType != null
-                            ? $"'{x.ReflectedType.FullName}.{x.Name}'"
+                        constants.Select(x => x.DeclaringType != null
+                            ? $"'{x.DeclaringType.FullName}.{x.Name}'"
                             : $"'{x.Name}'"));
                     throw new ParseErrorException(
                         $"Constant '{name}' is ambiguous, found following:{Environment.NewLine}{constsList}.",
@@ -839,14 +843,14 @@ namespace ExpressiveAnnotations.Analysis
             }
             else
             {
-                constant = ContextType.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                constant = ContextType.GetFields(ReflectionExtensions.BindingFlags.Public | ReflectionExtensions.BindingFlags.Static | ReflectionExtensions.BindingFlags.FlattenHierarchy)
                     .SingleOrDefault(fi => fi.IsLiteral && !fi.IsInitOnly && fi.Name.Equals(name));
             }
 
             if (constant == null)
                 return null;
 
-            var value = constant.GetRawConstantValue();
+            var value = constant.GetValue(null);
             Consts[name] = (value as string)?.Replace(Environment.NewLine, "\n") ?? value; // in our language new line is represented by \n char (consts map is then sent to JavaScript, and JavaScript new line is also \n)
             return Expression.Constant(value);
         }

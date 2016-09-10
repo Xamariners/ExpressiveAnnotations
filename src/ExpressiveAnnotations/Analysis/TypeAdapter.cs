@@ -4,6 +4,10 @@ using System.Linq.Expressions;
 
 namespace ExpressiveAnnotations.Analysis
 {
+    using System.Reflection;
+
+    using ExpressiveAnnotations.Infrastructure;
+
     /// <summary>
     ///     Adjusts types compatibility for operations.
     /// </summary>
@@ -17,17 +21,17 @@ namespace ExpressiveAnnotations.Analysis
             oute1 = e1;
             oute2 = e2;
 
-            if (oute1.Type.IsEnum && oute2.Type.IsEnum
+            if (oute1.Type.GetTypeInfo().IsEnum && oute2.Type.GetTypeInfo().IsEnum
                 && oute1.Type.UnderlyingType() != oute2.Type.UnderlyingType()) // various enum types
                 return;
 
             if (oute1.Type == typeof (string) && oute2.Type == typeof (char)) // convert char to string
-                oute2 = Expression.Call(oute2, typeof (object).GetMethod("ToString"));
+                oute2 = Expression.Call(oute2, typeof (object).GetTypeInfo().GetDeclaredMethod("ToString"));
             else if (oute1.Type == typeof (char) && oute2.Type == typeof (string))
-                oute1 = Expression.Call(oute1, typeof (object).GetMethod("ToString"));
+                oute1 = Expression.Call(oute1, typeof (object).GetTypeInfo().GetDeclaredMethod("ToString"));
 
             if (operation != TokenType.DIV // do not promote integral numeric values to double - exception for division operation, e.g. 1/2 should evaluate to 0.5 double like in JS
-                && !oute1.Type.IsEnum && !oute2.Type.IsEnum
+                && !oute1.Type.GetTypeInfo().IsEnum && !oute2.Type.GetTypeInfo().IsEnum
                 && oute1.Type.IsIntegralNumeric() && oute2.Type.IsIntegralNumeric())
             {
                 var relation = oute1.Type.HasHigherPrecisionThan(oute2.Type);

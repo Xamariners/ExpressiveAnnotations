@@ -289,25 +289,7 @@ namespace ExpressiveAnnotations.Tests
             Assert.Equal("The Priority property has not been set. Use the GetPriority method to get the value.", e.Message);
         }
 
-        [Fact]
-        public void display_attribute_takes_precedence_over_displayname_attribute()
-        {
-            var model = new DisplayModel();
-            var context = new ValidationContext(model);
-
-            var results = new List<ValidationResult>();
-
-            model.Value3 = null;
-            Validator.TryValidateObject(model, context, results, true);
-            Assert.Equal("requiredif only chosen", results.Single().ErrorMessage);
-
-            results.Clear();
-
-            model.Value3 = new object();
-            Validator.TryValidateObject(model, context, results, true);
-            Assert.Equal("assertthat only chosen", results.Single().ErrorMessage);
-        }
-
+       
         [Fact]
         public void throw_when_requirement_is_applied_to_field_of_non_nullable_value_type()
         {

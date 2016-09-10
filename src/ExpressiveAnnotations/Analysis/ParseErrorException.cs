@@ -6,14 +6,15 @@ using System;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Security;
-using System.Security.Permissions;
 
 namespace ExpressiveAnnotations.Analysis
 {
+    using ExpressiveAnnotations.Infrastructure;
+
     /// <summary>
     ///     The exception thrown when parse operation detects error in a specified expression.
     /// </summary>
-    [Serializable] // this attribute is not inherited from Exception and must be specified otherwise serialization will fail
+    [DataContract] // this attribute is not inherited from Exception and must be specified otherwise serialization will fail
     public class ParseErrorException : Exception
     {
         /// <summary>
@@ -70,51 +71,23 @@ namespace ExpressiveAnnotations.Analysis
             Expression = expression;
             Location = location.Clone();
         }
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="ParseErrorException" /> class.
-        /// </summary>
-        /// <param name="info">The information.</param>
-        /// <param name="context">The context.</param>
-        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
-        protected ParseErrorException(SerializationInfo info, StreamingContext context) // serialization constructor (without it deserialization will fail), protected for unsealed classes, private for sealed classes
-            : base(info, context)
-        {
-            Error = (string) info.GetValue("Error", typeof (string));
-            Expression = (string) info.GetValue("Expression", typeof (string));
-            Location = (Location) info.GetValue("Location", typeof (Location));
-        }
-
+        
         /// <summary>
         ///     Gets the error message.
         /// </summary>
+        [DataMember]
         public string Error { get; private set; }
 
         /// <summary>
         ///     Gets the expression.
         /// </summary>        
+        [DataMember]
         public string Expression { get; private set; }
 
         /// <summary>
         ///     Gets the error location.
         /// </summary>
+        [DataMember]
         public Location Location { get; private set; }
-
-        /// <summary>
-        ///     Gets the object data.
-        /// </summary>
-        /// <param name="info">The information.</param>
-        /// <param name="context">The context.</param>
-        [SecurityCritical]
-        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)] // deny creating an object of this type from a data that wasn't created by this serialization code 
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            Debug.Assert(info != null);
-
-            info.AddValue("Error", Error, typeof (string));
-            info.AddValue("Expression", Expression, typeof (string));
-            info.AddValue("Location", Location, typeof (Location));            
-            base.GetObjectData(info, context);
-        }
     }
 }

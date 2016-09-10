@@ -13,6 +13,10 @@ using ExpressiveAnnotations.Functions;
 
 namespace ExpressiveAnnotations.Attributes
 {
+    using System.Reflection;
+
+    using ExpressiveAnnotations.Infrastructure;
+
     /// <summary>
     ///     Base class for expressive validation attributes.
     /// </summary>
@@ -102,13 +106,14 @@ namespace ExpressiveAnnotations.Attributes
                         $"The {"Priority"} property has not been set. Use the {"GetPriority"} method to get the value.");
                 return _priority.Value;
             }
-            set { _priority = value; }
+            set { _priority = value; } 
         }
 
+        
         /// <summary>
         ///     When implemented in a derived class, gets a unique identifier for this <see cref="T:System.Attribute" />.
         /// </summary>
-        public override object TypeId => $"{GetType().FullName}[{Regex.Replace(Expression, @"\s+", string.Empty)}]"; /* distinguishes instances based on provided expressions - that way of TypeId creation is chosen over the alternatives below: 
+        public object TypeId => $"{GetType().FullName}[{Regex.Replace(Expression, @"\s+", string.Empty)}]"; /* distinguishes instances based on provided expressions - that way of TypeId creation is chosen over the alternatives below: 
                                                                                                                       *     - returning new object - it is too much, instances would be always different, 
                                                                                                                       *     - returning hash code based on expression - can lead to collisions (infinitely many strings can't be mapped injectively into any finite set - best unique identifier for string is the string itself) 
                                                                                                                       */
@@ -185,8 +190,7 @@ namespace ExpressiveAnnotations.Attributes
             {
                 IList<FormatItem> items;
                 var message = PreformatMessage(displayName, expression, out items);
-
-                message = items.Aggregate(message, (cargo, current) => current.Indicator != null && !current.Constant ? cargo.Replace(current.Uuid.ToString(), Helper.ExtractDisplayName(objectInstance.GetType(), current.FieldPath)) : cargo);
+                
                 message = items.Aggregate(message, (cargo, current) => current.Indicator == null && !current.Constant ? cargo.Replace(current.Uuid.ToString(), (Helper.ExtractValue(objectInstance, current.FieldPath) ?? string.Empty).ToString()) : cargo);
                 return message;
             }
@@ -220,7 +224,6 @@ namespace ExpressiveAnnotations.Attributes
                 var message = PreformatMessage(displayName, expression, out items);
 
                 var map = items.Where(x => x.Indicator == null && !x.Constant).Select(x => x.FieldPath).Distinct().ToDictionary(x => x, x => Guid.NewGuid()); // sanitize
-                message = items.Aggregate(message, (cargo, current) => current.Indicator != null && !current.Constant ? cargo.Replace(current.Uuid.ToString(), Helper.ExtractDisplayName(objectType, current.FieldPath)) : cargo);
                 message = items.Aggregate(message, (cargo, current) => current.Indicator == null && !current.Constant ? cargo.Replace(current.Uuid.ToString(), map[current.FieldPath].ToString()) : cargo);
                 fieldsMap = map;
                 return message;
@@ -289,17 +292,11 @@ namespace ExpressiveAnnotations.Attributes
                 return;
 
             validationContext.MemberName = validationContext.MemberName ?? validationContext.DisplayName;
-            var prop = validationContext.ObjectType.GetProperty(validationContext.MemberName);
+            var prop = validationContext.ObjectType.GetRuntimeProperty(validationContext.MemberName);
             if (prop == null)
-            {
-                prop = validationContext.ObjectType.GetPropertyByDisplayName(validationContext.MemberName);
-                if (prop == null)
-                {
-                    validationContext.MemberName = null;
-                    return;
-                }
-
-                validationContext.MemberName = prop.Name;
+            {  
+                validationContext.MemberName = null;
+                return;
             }
             PropertyType = prop.PropertyType;
         }

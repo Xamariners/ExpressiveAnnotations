@@ -10,6 +10,8 @@ using System.Text.RegularExpressions;
 
 namespace ExpressiveAnnotations.Analysis
 {
+    using ExpressiveAnnotations.Infrastructure;
+
     /// <summary>
     ///     Performs the lexical analysis of a specified logical expression.
     /// </summary>

@@ -787,7 +787,7 @@ namespace ExpressiveAnnotations.Tests
         public void verify_consts_ambiguity()
         {
             var parser = new Parser();
-
+            
             // ensure that this doesn't consider Dogs.Const and HotDogs.Const constants to be ambiguous
             Assert.True(parser.Parse<object, bool>("Dogs.Const == 0").Invoke(null));
             var e = Assert.Throws<ParseErrorException>(() => parser.Parse<object, bool>("Utility.Const == 'outside1'"));
@@ -1103,8 +1103,8 @@ namespace ExpressiveAnnotations.Tests
             Assert.Equal(new Location(1, 3), e.Location, new LocationComparer());
 
             e = Assert.Throws<ParseErrorException>(() => parser.Parse<Model, bool>($"YesNo.Yes {oper} YesNo.No"));
-            Assert.Equal($"Operator '{oper}' cannot be applied to operands of type 'ExpressiveAnnotations.Tests.ParserTest+YesNo' and 'ExpressiveAnnotations.Tests.ParserTest+YesNo'.", e.Error);
-            Assert.Equal(new Location(1, 11), e.Location, new LocationComparer());
+            Assert.Equal(@"Only public properties, constants and enums are accepted. Identifier 'YesNo' not known.", e.Error);
+            Assert.Equal(new Location(1, 1), e.Location, new LocationComparer());
 
             e = Assert.Throws<ParseErrorException>(() => parser.Parse<Model, bool>($"null {oper} null"));
             Assert.Equal($"Operator '{oper}' cannot be applied to operands of type 'null' and 'null'.", e.Error);
