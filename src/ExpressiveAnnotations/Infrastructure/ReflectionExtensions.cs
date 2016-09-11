@@ -13,6 +13,43 @@ namespace ExpressiveAnnotations.Infrastructure
     /// </summary>
     public static class ReflectionExtensions
     {
+
+        private static readonly Dictionary<Type, TypeCode> _typeCodeTable =
+        new Dictionary<Type, TypeCode>
+        {
+            { typeof(Boolean), TypeCode.Boolean },
+            { typeof(Char), TypeCode.Char },
+            { typeof(Byte), TypeCode.Byte },
+            { typeof(Int16), TypeCode.Int16 },
+            { typeof(Int32), TypeCode.Int32 },
+            { typeof(Int64), TypeCode.Int64 },
+            { typeof(SByte), TypeCode.SByte },
+            { typeof(UInt16), TypeCode.UInt16 },
+            { typeof(UInt32), TypeCode.UInt32 },
+            { typeof(UInt64), TypeCode.UInt64 },
+            { typeof(Single), TypeCode.Single },
+            { typeof(Double), TypeCode.Double },
+            { typeof(DateTime), TypeCode.DateTime },
+            { typeof(Decimal), TypeCode.Decimal },
+            { typeof(String), TypeCode.String },
+        };
+
+
+        public static TypeCode GetTypeCode(this Type type)
+        {
+            if (type == null)
+            {
+                return TypeCode.Empty;
+            }
+            TypeCode result;
+            if (!_typeCodeTable.TryGetValue(type, out result))
+            {
+                result = TypeCode.Object;
+            }
+            return result;
+        }
+        
+
         /// <summary>
         /// GetTypes
         /// </summary>
@@ -353,60 +390,83 @@ namespace ExpressiveAnnotations.Infrastructure
             return pro.GetValue(entityObj, null);
 
         }
+        
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        [Flags]
-        public enum BindingFlags
-        {
-            //None = 0,
-            //Instance = 1,
-            //Public = 2,
-            //Static = 4,
-            //FlattenHierarchy = 8,
-            //SetProperty = 8192
+    public enum TypeCode
+    {
+        Empty = 0,
+        Object = 1,
+        DBNull = 2,
+        Boolean = 3,
+        Char = 4,
+        SByte = 5,
+        Byte = 6,
+        Int16 = 7,
+        UInt16 = 8,
+        Int32 = 9,
+        UInt32 = 10,
+        Int64 = 11,
+        UInt64 = 12,
+        Single = 13,
+        Double = 14,
+        Decimal = 15,
+        DateTime = 16,
+        String = 18,
+    }
 
-            /// <summary/>
-            Default = 0,
-            /// <summary/>
-            IgnoreCase = 1,
-            /// <summary/>
-            DeclaredOnly = 2,
-            /// <summary/>
-            Instance = 4,
-            /// <summary/>
-            Static = 8,
-            /// <summary/>
-            Public = 16,
-            /// <summary/>
-            NonPublic = 32,
-            /// <summary/>
-            FlattenHierarchy = 64,
-            /// <summary/>
-            InvokeMethod = 256,
-            /// <summary/>
-            CreateInstance = 512,
-            /// <summary/>
-            GetField = 1024,
-            /// <summary/>
-            SetField = 2048,
-            /// <summary/>
-            GetProperty = 4096,
-            /// <summary/>
-            SetProperty = 8192,
-            /// <summary/>
-            PutDispProperty = 16384,
-            /// <summary/>
-            PutRefDispProperty = 32768,
-            /// <summary/>
-            ExactBinding = 65536,
-            /// <summary/>
-            SuppressChangeType = 131072,
-            /// <summary/>
-            OptionalParamBinding = 262144,
-            /// <summary/>
-            IgnoreReturn = 16777216,
-        }
+    /// <summary>
+    /// 
+    /// </summary>
+    [Flags]
+    public enum BindingFlags
+    {
+        //None = 0,
+        //Instance = 1,
+        //Public = 2,
+        //Static = 4,
+        //FlattenHierarchy = 8,
+        //SetProperty = 8192
+
+        /// <summary/>
+        Default = 0,
+        /// <summary/>
+        IgnoreCase = 1,
+        /// <summary/>
+        DeclaredOnly = 2,
+        /// <summary/>
+        Instance = 4,
+        /// <summary/>
+        Static = 8,
+        /// <summary/>
+        Public = 16,
+        /// <summary/>
+        NonPublic = 32,
+        /// <summary/>
+        FlattenHierarchy = 64,
+        /// <summary/>
+        InvokeMethod = 256,
+        /// <summary/>
+        CreateInstance = 512,
+        /// <summary/>
+        GetField = 1024,
+        /// <summary/>
+        SetField = 2048,
+        /// <summary/>
+        GetProperty = 4096,
+        /// <summary/>
+        SetProperty = 8192,
+        /// <summary/>
+        PutDispProperty = 16384,
+        /// <summary/>
+        PutRefDispProperty = 32768,
+        /// <summary/>
+        ExactBinding = 65536,
+        /// <summary/>
+        SuppressChangeType = 131072,
+        /// <summary/>
+        OptionalParamBinding = 262144,
+        /// <summary/>
+        IgnoreReturn = 16777216,
     }
 }

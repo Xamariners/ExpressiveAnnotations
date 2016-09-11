@@ -823,7 +823,7 @@ namespace ExpressiveAnnotations.Analysis
                 var constants = PCLExt.AppDomain.AppDomain.GetAssemblies()
                     .SelectMany(a => new AssemblyTypeProvider(a).GetLoadableTypes())
                     .Where(t => string.Concat(".", t.FullName.Replace("+", ".")).EndsWith(string.Concat(".", constTypeName)))
-                    .SelectMany(t => t.GetFields(ReflectionExtensions.BindingFlags.Public | ReflectionExtensions.BindingFlags.Static | ReflectionExtensions.BindingFlags.FlattenHierarchy)
+                    .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
                         .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.Name.Equals(parts.Last())))
                     .ToList();
 
@@ -843,7 +843,7 @@ namespace ExpressiveAnnotations.Analysis
             }
             else
             {
-                constant = ContextType.GetFields(ReflectionExtensions.BindingFlags.Public | ReflectionExtensions.BindingFlags.Static | ReflectionExtensions.BindingFlags.FlattenHierarchy)
+                constant = ContextType.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
                     .SingleOrDefault(fi => fi.IsLiteral && !fi.IsInitOnly && fi.Name.Equals(name));
             }
 

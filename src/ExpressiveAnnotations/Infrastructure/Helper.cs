@@ -95,18 +95,18 @@ namespace ExpressiveAnnotations.Infrastructure
         {
             Debug.Assert(type != null);
 
-            var numericTypes = new HashSet<string>
+            var numericTypes = new HashSet<TypeCode>
             {
-                nameof(SByte),     //sbyte
-                nameof(Byte),      //byte
-                nameof(Int16),     //short
-                nameof(UInt16),    //ushort
-                nameof(Int32),     //int
-                nameof(UInt32),    //uint
-                nameof(Int64),     //long
-                nameof(UInt64)     //ulong
+               TypeCode.SByte,     //sbyte
+               TypeCode.Byte,      //byte
+               TypeCode.Int16,     //short
+               TypeCode.UInt16,    //ushort
+               TypeCode.Int32,     //int
+               TypeCode.UInt32,    //uint
+               TypeCode.Int64,     //long
+               TypeCode.UInt64     //ulong
             };
-            return numericTypes.Contains(type.Name) ||
+            return numericTypes.Contains(type.GetTypeCode()) ||
                    type.IsNullable() && Nullable.GetUnderlyingType(type).IsNumeric();
         }
 
@@ -114,13 +114,13 @@ namespace ExpressiveAnnotations.Infrastructure
         {
             Debug.Assert(type != null);
 
-            var numericTypes = new HashSet<string>
+            var numericTypes = new HashSet<TypeCode>
             {
-                nameof(Single),    //float (floating binary point type, e.g. 1001.101)
-                nameof(Double),    //double (floating binary point type, e.g. 1001.101)
-                nameof(Decimal)    //decimal (floating decimal point type, e.g. 1234.567)
+                TypeCode.Single,    //float (floating binary point type, e.g. 1001.101)
+                TypeCode.Double,    //double (floating binary point type, e.g. 1001.101)
+                TypeCode.Decimal  //decimal (floating decimal point type, e.g. 1234.567)
             };
-            return numericTypes.Contains(type.Name) ||
+            return numericTypes.Contains(type.GetTypeCode()) ||
                    type.IsNullable() && Nullable.GetUnderlyingType(type).IsNumeric();
         }
 
