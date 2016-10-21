@@ -35,6 +35,11 @@ namespace ExpressiveAnnotations.Infrastructure
         };
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static TypeCode GetTypeCode(this Type type)
         {
             if (type == null)
@@ -393,25 +398,64 @@ namespace ExpressiveAnnotations.Infrastructure
         
     }
 
+    /// <summary>
+    /// TypeCode
+    /// </summary>
     public enum TypeCode
     {
+        /// <summary>
+        /// </summary>
         Empty = 0,
+        /// <summary>
+        /// </summary>
         Object = 1,
+        /// <summary>
+        /// </summary>
         DBNull = 2,
+        /// <summary>
+        /// </summary>
         Boolean = 3,
+        /// <summary>
+        /// </summary>
         Char = 4,
+        /// <summary>
+        /// </summary>
         SByte = 5,
+        /// <summary>
+        /// </summary>
         Byte = 6,
+        /// <summary>
+        /// </summary>
         Int16 = 7,
+        /// <summary>
+        /// </summary>
         UInt16 = 8,
+        /// <summary>
+        /// </summary>
         Int32 = 9,
+        /// <summary>
+        /// </summary>
         UInt32 = 10,
+        /// <summary>
+        /// </summary>
         Int64 = 11,
+        /// <summary>
+        /// </summary>
         UInt64 = 12,
+        /// <summary>
+        /// </summary>
         Single = 13,
+        /// <summary>
+        /// </summary>
         Double = 14,
+        /// <summary>
+        /// </summary>
         Decimal = 15,
+        /// <summary>
+        /// </summary>
         DateTime = 16,
+        /// <summary>
+        /// </summary>
         String = 18,
     }
 
